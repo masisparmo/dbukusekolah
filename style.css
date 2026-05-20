@@ -127,6 +127,8 @@ body {
     border-radius: 1.5rem;
     padding: 1.5rem;
     box-shadow: var(--shadow-lg);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .search-bar {
