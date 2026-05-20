@@ -23,49 +23,22 @@ const API_K13 = 'https://api.buku.cloudapp.web.id/api/catalogue/getTextBooks?lim
 // Initialize Application
 async function initApp() {
     try {
-        let debugInfo = [];
+        // Fetch from local static data.json (avoids Chrome Private Network Access block)
+        const response = await fetch('./data.json');
+        if (!response.ok) throw new Error(`Gagal memuat data.json: HTTP ${response.status}`);
         
-        // Fetch Kurikulum Merdeka
-        let booksPenggerak = [];
-        try {
-            const r = await fetch(API_PENGGERAK);
-            debugInfo.push(`Merdeka API: HTTP ${r.status}`);
-            if (r.ok) {
-                const data = await r.json();
-                booksPenggerak = (data.results || []).map(b => ({ ...b, source: 'Merdeka' }));
-                debugInfo.push(`Merdeka: ${booksPenggerak.length} buku`);
-            } else {
-                debugInfo.push(`Merdeka GAGAL: ${r.statusText}`);
-            }
-        } catch(e) {
-            debugInfo.push(`Merdeka ERROR: ${e.message}`);
-        }
-
-        // Fetch Kurikulum 2013
-        let booksK13 = [];
-        try {
-            const r = await fetch(API_K13);
-            debugInfo.push(`K13 API: HTTP ${r.status}`);
-            if (r.ok) {
-                const data = await r.json();
-                booksK13 = (data.results || []).map(b => ({ ...b, source: 'K-13' }));
-                debugInfo.push(`K13: ${booksK13.length} buku`);
-            } else {
-                debugInfo.push(`K13 GAGAL: ${r.statusText}`);
-            }
-        } catch(e) {
-            debugInfo.push(`K13 ERROR: ${e.message}`);
-        }
-
-        allBooks = [...booksPenggerak, ...booksK13];
-        debugInfo.push(`Total: ${allBooks.length} buku`);
+        const data = await response.json();
+        allBooks = data.books || [];
         
-        // Show debug info if total is 0
         if (allBooks.length === 0) {
-            loadingState.querySelector('h2').textContent = 'Gagal Memuat Data';
-            loadingState.querySelector('p').textContent = debugInfo.join(' | ');
-            loadingState.querySelector('.spinner').style.display = 'none';
-            return;
+            throw new Error('Data buku kosong di data.json');
+        }
+
+        // Show last updated info
+        if (data.generated_at) {
+            const date = new Date(data.generated_at);
+            document.querySelector('.logo-container p').textContent =
+                `Unduh Buku Digital Kemdikbud · Diperbarui: ${date.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`;
         }
 
         // Hide loading

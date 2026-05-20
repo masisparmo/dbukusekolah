@@ -1,0 +1,62 @@
+name: Update Data Buku
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Setiap hari pukul 01:00 UTC (08:00 WIB)
+  workflow_dispatch:       # Bisa dijalankan manual dari GitHub
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Fetch data buku dari API Kemdikbud
+        run: |
+          python - <<'EOF'
+          import requests, json
+          from datetime import datetime, timezone
+
+          print('Fetching Kurikulum Merdeka...')
+          r1 = requests.get('https://api.buku.cloudapp.web.id/api/catalogue/getPenggerakTextBooks?limit=5000', timeout=30)
+          d1 = r1.json().get('results', [])
+          for b in d1: b['source'] = 'Merdeka'
+          print(f'Merdeka: {len(d1)} buku')
+
+          print('Fetching Kurikulum 2013...')
+          r2 = requests.get('https://api.buku.cloudapp.web.id/api/catalogue/getTextBooks?limit=5000', timeout=30)
+          d2 = r2.json().get('results', [])
+          for b in d2: b['source'] = 'K-13'
+          print(f'K13: {len(d2)} buku')
+
+          all_books = d1 + d2
+          print(f'Total: {len(all_books)} buku')
+
+          with open('data.json', 'w', encoding='utf-8') as f:
+              json.dump({
+                  'books': all_books,
+                  'generated_at': datetime.now(timezone.utc).isoformat()
+              }, f, ensure_ascii=False)
+
+          print('data.json berhasil diperbarui!')
+          EOF
+
+      - name: Commit dan push data.json
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data.json
+          git diff --staged --quiet || git commit -m "chore: update data buku $(date +'%Y-%m-%d')"
+          git push
