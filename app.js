@@ -37,8 +37,10 @@ async function initApp() {
         // Show last updated info
         if (data.generated_at) {
             const date = new Date(data.generated_at);
-            document.querySelector('.logo-container p').textContent =
-                `Unduh Buku Digital Kemdikbud · Diperbarui: ${date.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`;
+            const subtitleEl = document.querySelector('.logo-container p');
+            if (subtitleEl) {
+                subtitleEl.textContent = `${subtitleEl.textContent} · Diperbarui: ${date.toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}`;
+            }
         }
 
         // Hide loading
