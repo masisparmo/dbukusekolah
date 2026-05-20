@@ -23,18 +23,51 @@ const API_K13 = 'https://api.buku.cloudapp.web.id/api/catalogue/getTextBooks?lim
 // Initialize Application
 async function initApp() {
     try {
-        // Fetch from both APIs simultaneously
-        const [resPenggerak, resK13] = await Promise.all([
-            fetch(API_PENGGERAK).then(r => r.json()).catch(() => ({ results: [] })),
-            fetch(API_K13).then(r => r.json()).catch(() => ({ results: [] }))
-        ]);
+        let debugInfo = [];
+        
+        // Fetch Kurikulum Merdeka
+        let booksPenggerak = [];
+        try {
+            const r = await fetch(API_PENGGERAK);
+            debugInfo.push(`Merdeka API: HTTP ${r.status}`);
+            if (r.ok) {
+                const data = await r.json();
+                booksPenggerak = (data.results || []).map(b => ({ ...b, source: 'Merdeka' }));
+                debugInfo.push(`Merdeka: ${booksPenggerak.length} buku`);
+            } else {
+                debugInfo.push(`Merdeka GAGAL: ${r.statusText}`);
+            }
+        } catch(e) {
+            debugInfo.push(`Merdeka ERROR: ${e.message}`);
+        }
 
-        // Process data
-        const booksPenggerak = (resPenggerak.results || []).map(b => ({ ...b, source: 'Merdeka' }));
-        const booksK13 = (resK13.results || []).map(b => ({ ...b, source: 'K-13' }));
-        
+        // Fetch Kurikulum 2013
+        let booksK13 = [];
+        try {
+            const r = await fetch(API_K13);
+            debugInfo.push(`K13 API: HTTP ${r.status}`);
+            if (r.ok) {
+                const data = await r.json();
+                booksK13 = (data.results || []).map(b => ({ ...b, source: 'K-13' }));
+                debugInfo.push(`K13: ${booksK13.length} buku`);
+            } else {
+                debugInfo.push(`K13 GAGAL: ${r.statusText}`);
+            }
+        } catch(e) {
+            debugInfo.push(`K13 ERROR: ${e.message}`);
+        }
+
         allBooks = [...booksPenggerak, ...booksK13];
+        debugInfo.push(`Total: ${allBooks.length} buku`);
         
+        // Show debug info if total is 0
+        if (allBooks.length === 0) {
+            loadingState.querySelector('h2').textContent = 'Gagal Memuat Data';
+            loadingState.querySelector('p').textContent = debugInfo.join(' | ');
+            loadingState.querySelector('.spinner').style.display = 'none';
+            return;
+        }
+
         // Hide loading
         loadingState.classList.add('hidden');
         
@@ -52,7 +85,7 @@ async function initApp() {
     } catch (error) {
         console.error("Gagal mengambil data buku:", error);
         loadingState.querySelector('h2').textContent = "Terjadi Kesalahan";
-        loadingState.querySelector('p').textContent = "Gagal terhubung ke server Kemdikbud. Periksa koneksi internet Anda.";
+        loadingState.querySelector('p').textContent = error.message;
         loadingState.querySelector('.spinner').style.display = 'none';
     }
 }
