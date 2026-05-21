@@ -2,7 +2,7 @@ name: Update Data Buku
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # Setiap hari pukul 01:00 UTC (08:00 WIB)
+    - cron: '17 1 * * *'  # Setiap hari pukul 01:17 UTC (08:17 WIB - Menghindari antrean padat menit :00)
   workflow_dispatch:       # Bisa dijalankan manual dari GitHub
 
 env:
