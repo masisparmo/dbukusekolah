@@ -331,6 +331,7 @@ body {
     flex-direction: column;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: slideUp 0.4s ease backwards;
+    min-width: 0;
 }
 
 .book-card:hover {
@@ -383,6 +384,7 @@ body {
     color: var(--text-muted);
     margin-bottom: 1.5rem;
     flex-grow: 1;
+    min-width: 0;
 }
 
 .book-meta p {
@@ -390,6 +392,17 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.book-meta .file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    flex-grow: 1;
+    min-width: 0;
 }
 
 .download-btn {
